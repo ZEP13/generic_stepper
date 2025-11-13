@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import com.zela.app.Db.DbConfig;
 
@@ -42,17 +43,17 @@ public class StepRepo {
         throw new SQLException("Impossible de créer/récupérer le type : " + typeName);
     }
 
-    public <T> void saveEntity(T entity) throws SQLException {
-        Class<?> clazz = entity.getClass();
+    public <T> void save(T entity) throws SQLException {
+        Class<?> clazz = entity.getClass(); // recupere la classe de lobjet passe en parametre
         String typeName = clazz.getSimpleName();
 
         try (Connection c = getConnection()) {
-            int typeId = getTypeId(typeName, c);
+            int typeId = getTypeId(typeName, c); // recupere l'id du type dans la table type
 
             String sql = "INSERT INTO value (field, value, type_id) VALUES (?, ?, ?)";
 
             for (Field field : clazz.getDeclaredFields()) {
-                field.setAccessible(true);
+                field.setAccessible(true); // permet d'accéder aux champs privés du modele
                 Object value;
                 try {
                     value = field.get(entity);
@@ -69,6 +70,42 @@ public class StepRepo {
             }
 
             System.out.println(typeName + " inséré dans la table 'value' (type_id=" + typeId + ")");
+        }
+    }
+
+    public <T> void saveEntities(List<T> entities) throws SQLException {
+        for (T entity : entities) {
+            save(entity);
+        }
+    }
+
+    public <T> void updateAllEntities(T entity, int entityId) throws SQLException {
+        Class<?> clazz = entity.getClass();
+        String typeName = clazz.getSimpleName();
+
+        try (Connection c = getConnection()) {
+            int typeId = getTypeId(typeName, c);
+
+            String sql = "UPDATE value SET value = ? WHERE field = ? AND type_id = ?";
+
+            for (Field field : clazz.getDeclaredFields()) {
+                field.setAccessible(true);
+                Object value;
+                try {
+                    value = field.get(entity);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+
+                try (PreparedStatement ps = c.prepareStatement(sql)) {
+                    ps.setString(1, value != null ? value.toString() : null);
+                    ps.setString(2, field.getName());
+                    ps.setInt(3, typeId);
+                    ps.executeUpdate();
+                }
+            }
+
+            System.out.println(typeName + " mis à jour dans la table 'value' (type_id=" + typeId + ")");
         }
     }
 }

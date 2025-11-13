@@ -5,30 +5,37 @@ import java.util.List;
 
 import com.zela.app.model.Employe;
 import com.zela.app.pipeline.ProcessingPipeline;
+import com.zela.app.repository.StepRepo;
+import com.zela.app.Db.DbConfig;
 import com.zela.app.methode.employeMethode.NormalizeNameStep;
 
 public class App {
     public static void main(String[] args) {
-        DbConfig dbConfig = new DbConfig();
-        StepRepo repo = new StepRepo(dbConfig);
+        try {
 
-        Employe employe = new Employe("Doe", "John", 30, 1);
-        repo.saveEntity(employe);
-        List<Employe> employes = new ArrayList<>();
-        employes.add(new Employe("  doe  ", "JOHN", 30, 1));
-        employes.add(new Employe("  smith  ", "jANE", 25, 1));
-        employes.add(new Employe("brown ", "ALICE ", 40, 0));
+            DbConfig dbConfig = DbConfig.fromResource("db.properties");
+            StepRepo repo = new StepRepo(dbConfig);
 
-        ProcessingPipeline<Employe> pipeline = new ProcessingPipeline<>();
+            Employe employe = new Employe("Doe", "John", 30, 1);
+            repo.save(employe);
+            List<Employe> employes = new ArrayList<>();
+            employes.add(new Employe("  doe  ", "JOHN", 30, 1));
+            employes.add(new Employe("  smith  ", "jANE", 25, 1));
+            employes.add(new Employe("brown ", "ALICE ", 40, 0));
 
-        pipeline
-                .addStep(new NormalizeNameStep());
+            ProcessingPipeline<Employe> pipeline = new ProcessingPipeline<>();
 
-        List<Employe> result = pipeline.execute(employes);
+            pipeline
+                    .addStep(new NormalizeNameStep());
 
-        System.out.println("=== Employés après traitement ===");
-        for (Employe e : result) {
-            System.out.println(e);
+            List<Employe> result = pipeline.execute(employes);
+
+            System.out.println("=== Employés après traitement ===");
+            for (Employe e : result) {
+                System.out.println(e);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
