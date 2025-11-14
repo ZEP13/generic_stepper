@@ -50,7 +50,13 @@ public class StepRepo {
         try (Connection c = getConnection()) {
             int typeId = getTypeId(typeName, c); // recupere l'id du type dans la table type
 
-            String sql = "INSERT INTO value (field, value, type_id) VALUES (?, ?, ?)";
+            int entityId;
+            try (PreparedStatement ps = c.prepareStatement("SELECT nextval('entity_seq') AS id");
+                    ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                entityId = rs.getInt("id");
+            }
+            String sql = "INSERT INTO value (field, value, type_id, entity_id) VALUES (?, ?, ?,?)";
 
             for (Field field : clazz.getDeclaredFields()) {
                 field.setAccessible(true); // permet d'accéder aux champs privés du modele
@@ -65,6 +71,7 @@ public class StepRepo {
                     ps.setString(1, field.getName());
                     ps.setString(2, value != null ? value.toString() : null);
                     ps.setInt(3, typeId);
+                    ps.setInt(4, entityId);
                     ps.executeUpdate();
                 }
             }
@@ -86,8 +93,7 @@ public class StepRepo {
         try (Connection c = getConnection()) {
             int typeId = getTypeId(typeName, c);
 
-            String sql = "UPDATE value SET value = ? WHERE field = ? AND type_id = ?";
-
+            String sql = "DELETE FROM value WHERE entity_id IN ( SELECT entity_id FROM value WHERE field='actif' AND value='0'); ";
             for (Field field : clazz.getDeclaredFields()) {
                 field.setAccessible(true);
                 Object value;
@@ -106,6 +112,37 @@ public class StepRepo {
             }
 
             System.out.println(typeName + " mis à jour dans la table 'value' (type_id=" + typeId + ")");
+        }
+    }
+
+    public <T> void deleteEntityByFieldValue(T entity) throws SQLException {
+        Class<?> clazz = entity.getClass();
+
+        try (Connection c = getConnection()) {
+            for (Field field : clazz.getDeclaredFields()) {
+                field.setAccessible(true);
+                Object value;
+                try {
+                    value = field.get(entity);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+
+                if (value == null)
+                    continue; // ignore null
+
+                // Supprimer toutes les lignes avec le même entity_id pour ce field/value
+                String sql = "DELETE FROM value WHERE entity_id IN (" +
+                        "SELECT entity_id FROM value WHERE field = ? AND value = ?" +
+                        ")";
+                try (PreparedStatement ps = c.prepareStatement(sql)) {
+                    ps.setString(1, field.getName());
+                    ps.setString(2, value.toString());
+                    int deletedRows = ps.executeUpdate();
+                    System.out.println("Supprimé " + deletedRows + " lignes pour entity_id avec field '"
+                            + field.getName() + "' et value '" + value + "'");
+                }
+            }
         }
     }
 }

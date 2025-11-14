@@ -8,6 +8,8 @@ import com.zela.app.pipeline.ProcessingPipeline;
 import com.zela.app.repository.StepRepo;
 import com.zela.app.Db.DbConfig;
 import com.zela.app.methode.employeMethode.NormalizeNameStep;
+import com.zela.app.methode.employeMethode.PersistEmployeToDatabaseStep;
+import com.zela.app.methode.employeMethode.RemoveInactiveEmplyeesStep;
 
 public class App {
     public static void main(String[] args) {
@@ -25,9 +27,9 @@ public class App {
 
             ProcessingPipeline<Employe> pipeline = new ProcessingPipeline<>();
 
-            pipeline
-                    .addStep(new NormalizeNameStep());
-
+            // pipeline.addStep(new NormalizeNameStep());
+            // pipeline.addStep(new PersistEmployeToDatabaseStep());
+            pipeline.addStep(new RemoveInactiveEmplyeesStep());
             List<Employe> result = pipeline.execute(employes);
 
             System.out.println("=== Employés après traitement ===");

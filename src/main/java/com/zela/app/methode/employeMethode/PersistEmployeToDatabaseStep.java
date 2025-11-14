@@ -8,7 +8,7 @@ import com.zela.app.Db.DbConfig;
 import com.zela.app.model.Employe;
 import com.zela.app.repository.StepRepo;
 
-public class PersistToDatabaseStep implements Step<Employe> {
+public class PersistEmployeToDatabaseStep implements Step<Employe> {
     @Override
     public List<Employe> execute(List<Employe> input) {
         try {

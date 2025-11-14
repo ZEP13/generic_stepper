@@ -48,7 +48,7 @@ public class DbConfig {
         Connection conn = DriverManager.getConnection(url, user, password);
         conn.setAutoCommit(true);
         try (Statement stmt = conn.createStatement()) {
-            stmt.execute("SET search_path TO csv_db");
+            stmt.execute("SET search_path TO stepper_db");
         }
         return conn;
     }
