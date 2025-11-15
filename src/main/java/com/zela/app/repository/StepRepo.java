@@ -84,6 +84,7 @@ public class StepRepo {
         for (T entity : entities) {
             save(entity);
         }
+        // entities.forEach(this::save);
     }
 
     public <T> void updateAllEntities(T entity, int entityId) throws SQLException {
@@ -115,6 +116,20 @@ public class StepRepo {
         }
     }
 
+    public void updateFieldValue(String fieldName, String newValue) throws SQLException {
+        String sql = "UPDATE value SET value = ? WHERE field = ? ";
+
+        try (Connection c = getConnection();
+                PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setString(1, newValue);
+            ps.setString(2, fieldName);
+
+            int updatedRows = ps.executeUpdate();
+            System.out.println("Nombre de lignes mises à jour : " + updatedRows);
+        }
+    }
+
     public <T> void deleteEntityByFieldValue(T entity) throws SQLException {
         Class<?> clazz = entity.getClass();
 
@@ -132,9 +147,7 @@ public class StepRepo {
                     continue; // ignore null
 
                 // Supprimer toutes les lignes avec le même entity_id pour ce field/value
-                String sql = "DELETE FROM value WHERE entity_id IN (" +
-                        "SELECT entity_id FROM value WHERE field = ? AND value = ?" +
-                        ")";
+                String sql = "DELETE FROM value WHERE entity_id IN (SELECT entity_id FROM value WHERE field = ? AND value = ? )";
                 try (PreparedStatement ps = c.prepareStatement(sql)) {
                     ps.setString(1, field.getName());
                     ps.setString(2, value.toString());
