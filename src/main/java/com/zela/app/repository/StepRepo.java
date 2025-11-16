@@ -116,14 +116,30 @@ public class StepRepo {
         }
     }
 
-    public void updateFieldValue(String fieldName, String newValue) throws SQLException {
-        String sql = "UPDATE value SET value = ? WHERE field = ? ";
+    public int findEntityByField(String fieldName) throws SQLException {
+        String sql = "SELECT entity_id FROM value WHERE field = ?";
+        try (Connection c = getConnection();
+                PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, fieldName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("entity_id");
+                } else {
+                    throw new SQLException("Aucun entity trouvé pour " + fieldName);
+                }
+            }
+        }
+    }
+
+    public void updateFieldValue(String fieldName, String newValue, int entityId) throws SQLException {
+        String sql = "UPDATE value SET value = ? WHERE field = ? AND entity_id = ?";
 
         try (Connection c = getConnection();
                 PreparedStatement ps = c.prepareStatement(sql)) {
 
             ps.setString(1, newValue);
             ps.setString(2, fieldName);
+            ps.setInt(3, entityId);
 
             int updatedRows = ps.executeUpdate();
             System.out.println("Nombre de lignes mises à jour : " + updatedRows);

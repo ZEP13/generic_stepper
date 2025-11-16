@@ -21,10 +21,18 @@ public class ApplyDiscountStep implements Step<Produit> {
             DbConfig dbConfig = DbConfig.fromResource("db.properties");
             StepRepo repo = new StepRepo(dbConfig);
             for (Produit produit : input) {
-                Double newPrice = (produit.getPrix()) - (discount / 100);
-                String fieldName = "prix";
-                if (newPrice >= 0) {
-                    repo.updateFieldValue(fieldName, newPrice.toString());
+                try {
+                    repo.findEntityByField("prix");
+
+                    Double newPrice = produit.getPrix() - (produit.getPrix() * discount / 100);
+                    String fieldName = "prix";
+                    if (newPrice >= 0) {
+                        repo.updateFieldValue(fieldName, String.valueOf(newPrice), produit.getEntityId());
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("erreur de la recuperation des id des produits");
                 }
             }
         } catch (Exception e) {

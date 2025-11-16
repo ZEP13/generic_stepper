@@ -11,6 +11,7 @@ import com.zela.app.Db.DbConfig;
 import com.zela.app.methode.employeMethode.NormalizeNameStep;
 import com.zela.app.methode.employeMethode.PersistEmployeToDatabaseStep;
 import com.zela.app.methode.employeMethode.RemoveInactiveEmplyeesStep;
+import com.zela.app.methode.produitMethode.ApplyDiscountStep;
 import com.zela.app.methode.produitMethode.PersistProduitToDatabaseStep;
 import com.zela.app.methode.produitMethode.RemoveOutOfStockStep;
 
@@ -36,20 +37,21 @@ public class App {
 
             ProcessingPipeline<Produit> produitPipeline = new ProcessingPipeline<>();
             produitPipeline.addStep(new PersistProduitToDatabaseStep());
-            // produitPipeline.addStep(new ApplyDiscountStep(10.0));
-            produitPipeline.addStep(new RemoveOutOfStockStep());
+            produitPipeline.addStep(new ApplyDiscountStep(10.0));
+            // produitPipeline.addStep(new RemoveOutOfStockStep());
+            List<Produit> produitResult = produitPipeline.execute(produit);
 
-            ProcessingPipeline<Employe> pipeline = new ProcessingPipeline<>();
+            // ProcessingPipeline<Employe> pipeline = new ProcessingPipeline<>();
 
             // pipeline.addStep(new NormalizeNameStep());
             // pipeline.addStep(new PersistEmployeToDatabaseStep());
-            pipeline.addStep(new RemoveInactiveEmplyeesStep());
-            List<Employe> result = pipeline.execute(employes);
+            // pipeline.addStep(new RemoveInactiveEmplyeesStep());
+            // List<Employe> result = pipeline.execute(employes);
 
             System.out.println("=== Employés après traitement ===");
-            for (Employe e : result) {
-                System.out.println(e);
-            }
+            // for (Employe e : result) {
+            // System.out.println(e);
+            // }
         } catch (Exception e) {
             e.printStackTrace();
         }
